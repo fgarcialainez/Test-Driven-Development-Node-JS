@@ -1,0 +1,10 @@
+{
+  "database": {
+    "database": "nodeapi-tdd-db",
+    "username": "my-db-user",
+    "password": "my-db-p4wd",
+    "dialect": "sqlite",
+    "storage": ":memory:",
+    "logging": false
+  }
+}
