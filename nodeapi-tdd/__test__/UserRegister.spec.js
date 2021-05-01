@@ -14,37 +14,39 @@ beforeEach(() => {
   return User.destroy({ truncate: true });
 });
 
-describe('User Registration', () => {
-  const postValidateUser = () => {
-    return request(app).post('/api/v1.0/users').send({
-      username: 'user1',
-      email: 'user1@email.com',
-      password: 'P4ssword',
-    });
-  };
+const validUser = {
+  username: 'user1',
+  email: 'user1@email.com',
+  password: 'P4ssword',
+};
 
+const postUser = (user = validUser) => {
+  return request(app).post('/api/v1.0/users').send(user);
+};
+
+describe('User Registration', () => {
   it('Returns 200 OK when signup request is valid', async () => {
     // Check the signup call response status code
-    const response = await postValidateUser();
+    const response = await postUser();
     expect(response.status).toBe(200);
   });
 
   it('Returns success message when signup request is valid', async () => {
     // Check the signup call response body
-    const response = await postValidateUser();
+    const response = await postUser();
     expect(response.body.message).toBe('User created');
   });
 
   it('Saves the user to database', async () => {
     // Check if the user has been saved correctly
-    await postValidateUser();
+    await postUser();
     const userList = await User.findAll();
     expect(userList.length).toBe(1);
   });
 
   it('Saves the username and email to database', async () => {
     // Check if the username and email have been saved correctly
-    await postValidateUser();
+    await postUser();
     const userList = await User.findAll();
     const savedUser = userList[0];
 
@@ -54,10 +56,35 @@ describe('User Registration', () => {
 
   it('Hashes the password stored in database', async () => {
     // Check if the password has been saved as a hash
-    await postValidateUser();
+    await postUser();
     const userList = await User.findAll();
     const savedUser = userList[0];
 
     expect(savedUser.password).not.toBe('P4ssword');
+  });
+
+  it('Returns 400 when username is null', async () => {
+    // Check if the endpoint returns a 400 when username is null
+    const response = await postUser({
+      username: null,
+      email: 'user1@email.com',
+      password: 'P4ssword',
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('Returns validationErrors in body when username is null', async () => {
+    // Check if the endpoint returns validationErrors in the body when username is null
+    const response = await postUser({
+      username: null,
+      email: 'user1@email.com',
+      password: 'P4ssword',
+    });
+
+    expect(response.body.validationErrors).not.toBeUndefined();
+    expect(response.body.validationErrors.username).toBe(
+      'Username can not be null'
+    );
   });
 });

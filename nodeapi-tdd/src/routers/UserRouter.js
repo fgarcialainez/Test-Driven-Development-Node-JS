@@ -7,6 +7,16 @@ const router = express.Router();
 
 // Implement routes
 router.post('/api/v1.0/users', async (req, res) => {
+  // Validate the username
+  const user = req.body;
+  if (user.username === null) {
+    return res.status(400).send({
+      validationErrors: {
+        username: 'Username can not be null',
+      },
+    });
+  }
+
   // Save the user
   await UserService.save(req.body);
 
