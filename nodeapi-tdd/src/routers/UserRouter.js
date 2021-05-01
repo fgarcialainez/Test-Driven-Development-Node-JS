@@ -1,47 +1,25 @@
 const UserService = require('../services/UserService');
+const { check, validationResult } = require('express-validator');
 
 const express = require('express');
 
 // Create router object
 const router = express.Router();
 
-// Define validator functions
-const validateUsername = (req, res, next) => {
-  // Validate the username
-  const user = req.body;
-  if (user.username === null) {
-    req.validationErrors = {
-      username: 'Username can not be null',
-    };
-  }
-
-  // Call next middleware
-  next();
-};
-
-const validateEmail = (req, res, next) => {
-  // Validate the email
-  const user = req.body;
-  if (user.email === null) {
-    req.validationErrors = {
-      ...req.validationErrors,
-      email: 'Email can not be null',
-    };
-  }
-
-  // Call next middleware
-  next();
-};
-
 // Implement routes
 router.post(
   '/api/v1.0/users',
-  validateUsername,
-  validateEmail,
+  check('username').notEmpty().withMessage('Username can not be null'),
+  check('email').notEmpty().withMessage('Email can not be null'),
   async (req, res) => {
-    if (req.validationErrors) {
-      const response = { validationErrors: { ...req.validationErrors } };
-      return res.status(400).send(response);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const validationErrors = {};
+      errors.array().forEach((element) => {
+        validationErrors[element.param] = element.msg;
+      });
+
+      return res.status(400).send({ validationErrors: validationErrors });
     }
 
     // Save the user
