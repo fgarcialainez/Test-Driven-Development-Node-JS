@@ -2,9 +2,9 @@
   "name": "nodeapi-tdd",
   "version": "1.0.0",
   "description": "Node.js + Express + TDD",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node app",
+    "start": "nodemon index",
     "test": "jest --watch",
     "lint": "eslint ."
   },
