@@ -15,91 +15,49 @@ beforeEach(() => {
 });
 
 describe('User Registration', () => {
-  it('Returns 200 OK when signup request is valid', (done) => {
-    request(app)
-      .post('/api/v1.0/users')
-      .send({
-        username: 'users1',
-        email: 'user1@email.com',
-        password: 'P4ssword',
-      })
-      .then((response) => {
-        // Check the signup call response status code
-        expect(response.status).toBe(200);
-        done();
-      });
+  const postValidateUser = () => {
+    return request(app).post('/api/v1.0/users').send({
+      username: 'user1',
+      email: 'user1@email.com',
+      password: 'P4ssword',
+    });
+  };
+
+  it('Returns 200 OK when signup request is valid', async () => {
+    // Check the signup call response status code
+    const response = await postValidateUser();
+    expect(response.status).toBe(200);
   });
 
-  it('Returns success message when signup request is valid', (done) => {
-    request(app)
-      .post('/api/v1.0/users')
-      .send({
-        username: 'users1',
-        email: 'user1@email.com',
-        password: 'P4ssword',
-      })
-      .then((response) => {
-        // Check the signup call response body
-        expect(response.body.message).toBe('User created');
-        done();
-      });
+  it('Returns success message when signup request is valid', async () => {
+    // Check the signup call response body
+    const response = await postValidateUser();
+    expect(response.body.message).toBe('User created');
   });
 
-  it('Saves the user to database', (done) => {
-    request(app)
-      .post('/api/v1.0/users')
-      .send({
-        username: 'user1',
-        email: 'user1@email.com',
-        password: 'P4ssword',
-      })
-      .then(() => {
-        // Check if the user has been saved correctly
-        User.findAll().then((userList) => {
-          expect(userList.length).toBe(1);
-          done();
-        });
-      });
+  it('Saves the user to database', async () => {
+    // Check if the user has been saved correctly
+    await postValidateUser();
+    const userList = await User.findAll();
+    expect(userList.length).toBe(1);
   });
 
-  it('Saves the username and email to database', (done) => {
-    request(app)
-      .post('/api/v1.0/users')
-      .send({
-        username: 'user1',
-        email: 'user1@email.com',
-        password: 'P4ssword',
-      })
-      .then(() => {
-        // Check if the username and email have been saved correctly
-        User.findAll().then((userList) => {
-          const savedUser = userList[0];
+  it('Saves the username and email to database', async () => {
+    // Check if the username and email have been saved correctly
+    await postValidateUser();
+    const userList = await User.findAll();
+    const savedUser = userList[0];
 
-          expect(savedUser.username).toBe('user1');
-          expect(savedUser.email).toBe('user1@email.com');
-
-          done();
-        });
-      });
+    expect(savedUser.username).toBe('user1');
+    expect(savedUser.email).toBe('user1@email.com');
   });
 
-  it('Hashes the password stored in database', (done) => {
-    request(app)
-      .post('/api/v1.0/users')
-      .send({
-        username: 'user1',
-        email: 'user1@email.com',
-        password: 'P4ssword',
-      })
-      .then(() => {
-        // Check if the password has been saved as a hash
-        User.findAll().then((userList) => {
-          const savedUser = userList[0];
+  it('Hashes the password stored in database', async () => {
+    // Check if the password has been saved as a hash
+    await postValidateUser();
+    const userList = await User.findAll();
+    const savedUser = userList[0];
 
-          expect(savedUser.password).not.toBe('P4ssword');
-
-          done();
-        });
-      });
+    expect(savedUser.password).not.toBe('P4ssword');
   });
 });
