@@ -87,4 +87,40 @@ describe('User Registration', () => {
       'Username can not be null'
     );
   });
+
+  it('Returns 400 when email is null', async () => {
+    // Check if the endpoint returns a 400 when email is null
+    const response = await postUser({
+      username: 'user1',
+      email: null,
+      password: 'P4ssword',
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('Returns validationErrors in body when email is null', async () => {
+    // Check if the endpoint returns validationErrors in the body when email is null
+    const response = await postUser({
+      username: 'user1',
+      email: null,
+      password: 'P4ssword',
+    });
+
+    expect(response.body.validationErrors).not.toBeUndefined();
+    expect(response.body.validationErrors.email).toBe('Email can not be null');
+  });
+
+  it('Returns validationErrors in body when email and password are null', async () => {
+    // Check if the endpoint returns validationErrors in the body when email and password are null
+    const response = await postUser({
+      username: null,
+      email: null,
+      password: 'P4ssword',
+    });
+
+    const body = response.body;
+    expect(body.validationErrors).not.toBeUndefined();
+    expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
+  });
 });
