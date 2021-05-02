@@ -1,7 +1,9 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const User = require('../models/User');
+const sequelize = require('../config/database');
 const EmailService = require('./EmailService');
+const EmailException = require('../exceptions/EmailException');
 
 // Generate a random activation token
 const generateToken = (length) => {
@@ -25,10 +27,17 @@ const save = async (body) => {
   };
 
   // Save the user to the database
-  await User.create(user);
+  const transaction = await sequelize.transaction();
+  await User.create(user, { transaction });
 
-  // Send the activation token by email
-  await EmailService.sendAccountActivation(email, user.activationToken);
+  try {
+    // Send the activation token by email
+    await EmailService.sendAccountActivation(email, user.activationToken);
+    await transaction.commit();
+  } catch (err) {
+    await transaction.rollback();
+    throw new EmailException();
+  }
 };
 
 const findByEmail = async (email) => {
