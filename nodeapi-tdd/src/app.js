@@ -1,10 +1,31 @@
 const express = require('express');
+const i18next = require('i18next');
+const Backend = require('i18next-fs-backend');
+const middleware = require('i18next-http-middleware');
 const UserRouter = require('./routers/UserRouter');
 
-// Create app
+// Create expresss app
 const app = express();
 
+// Setup internationalization
+i18next
+  .use(Backend)
+  .use(middleware.LanguageDetector)
+  .init({
+    fallbackLng: 'en',
+    lng: 'en',
+    ns: ['translation'],
+    defaultNS: 'translation',
+    backend: {
+      loadPath: './locales/{{lng}}/{{ns}}.json',
+    },
+    detection: {
+      lookupHeader: 'accept-language',
+    },
+  });
+
 // Setup middleware
+app.use(middleware.handle(i18next));
 app.use(express.json());
 app.use(UserRouter);
 
