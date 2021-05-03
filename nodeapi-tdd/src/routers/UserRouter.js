@@ -57,7 +57,7 @@ router.post(
   }
 );
 
-// Authenticate user in the system
+// Implemented endpoint to activate a user in the system
 router.post('/api/v1.0/users/token/:token', async (req, res, next) => {
   const token = req.params.token;
   try {

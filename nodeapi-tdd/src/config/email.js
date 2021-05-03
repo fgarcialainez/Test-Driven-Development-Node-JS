@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const config = require('config')
+const config = require('config');
 
 // Load SMTP server configuration
 const mailConfig = config.get('mail');

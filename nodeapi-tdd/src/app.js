@@ -3,6 +3,7 @@ const i18next = require('i18next');
 const Backend = require('i18next-fs-backend');
 const middleware = require('i18next-http-middleware');
 const UserRouter = require('./routers/UserRouter');
+const AuthenticationRouter = require('./routers/AuthenticationRouter');
 const ErrorHandler = require('./exceptions/ErrorHandler');
 
 // Create expresss app
@@ -29,6 +30,7 @@ i18next
 app.use(middleware.handle(i18next));
 app.use(express.json());
 app.use(UserRouter);
+app.use(AuthenticationRouter);
 app.use(ErrorHandler);
 
 module.exports = app;
