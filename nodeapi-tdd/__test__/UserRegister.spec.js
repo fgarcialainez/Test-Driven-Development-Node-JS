@@ -51,7 +51,7 @@ afterAll(async () => {
 
 const validUser = {
   username: 'user1',
-  email: 'user1@email.com',
+  email: 'user1@mail.com',
   password: 'P4ssword',
 };
 
@@ -90,7 +90,7 @@ describe('User Registration', () => {
     const savedUser = userList[0];
 
     expect(savedUser.username).toBe('user1');
-    expect(savedUser.email).toBe('user1@email.com');
+    expect(savedUser.email).toBe('user1@mail.com');
   });
 
   it('Hashes the password stored in database', async () => {
@@ -106,7 +106,7 @@ describe('User Registration', () => {
     // Check if the endpoint returns a 400 when username is null
     const response = await postUser({
       username: null,
-      email: 'user1@email.com',
+      email: 'user1@mail.com',
       password: 'P4ssword',
     });
 
@@ -146,7 +146,7 @@ describe('User Registration', () => {
     async (field, expectedMessage) => {
       const user = {
         username: 'user1',
-        email: 'user1@email.com',
+        email: 'user1@mail.com',
         password: 'P4ssword',
       };
       user[field] = null;
@@ -189,7 +189,7 @@ describe('User Registration', () => {
     async ({ field, value, expectedMessage }) => {
       const user = {
         username: 'user1',
-        email: 'user1@email.com',
+        email: 'user1@mail.com',
         password: 'P4ssword',
       };
       user[field] = value;
@@ -243,7 +243,7 @@ describe('User Registration', () => {
     await postUser();
     const users = await User.findAll();
     const savedUser = users[0];
-    expect(lastMail).toContain('user1@email.com');
+    expect(lastMail).toContain('user1@mail.com');
     expect(lastMail).toContain(savedUser.activationToken);
   });
 

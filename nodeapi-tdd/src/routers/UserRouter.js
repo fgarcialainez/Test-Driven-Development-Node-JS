@@ -1,14 +1,14 @@
 const UserService = require('../services/UserService');
 const { check, validationResult } = require('express-validator');
-const ValidationException = require('../exceptions/ValidationException');
 const pagination = require('../middleware/pagination');
+const ValidationException = require('../exceptions/ValidationException');
 
 const express = require('express');
 
 // Create router object
 const router = express.Router();
 
-// Implement routes
+// Create a user in the system
 router.post(
   '/api/v1.0/users',
   check('username')
@@ -57,6 +57,7 @@ router.post(
   }
 );
 
+// Authenticate user in the system
 router.post('/api/v1.0/users/token/:token', async (req, res, next) => {
   const token = req.params.token;
   try {
@@ -70,10 +71,22 @@ router.post('/api/v1.0/users/token/:token', async (req, res, next) => {
   }
 });
 
+// Retrieve users list endpoint
 router.get('/api/v1.0/users', pagination, async (req, res) => {
   const { page, size } = req.pagination;
   const users = await UserService.getUsers(page, size);
   res.send(users);
 });
 
+// Retrieve user endpoint
+router.get('/api/v1.0/users/:id', async (req, res, next) => {
+  try {
+    const user = await UserService.getUser(req.params.id);
+    res.send(user);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Export the router
 module.exports = router;
