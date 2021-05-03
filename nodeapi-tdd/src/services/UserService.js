@@ -57,4 +57,21 @@ const activate = async (token) => {
   await user.save();
 };
 
-module.exports = { save, findByEmail, activate };
+// Get active users in the system
+const getUsers = async (page, size) => {
+  const usersWithCount = await User.findAndCountAll({
+    where: { inactive: false },
+    attributes: ['id', 'username', 'email'],
+    limit: size,
+    offset: page * size,
+  });
+
+  return {
+    content: usersWithCount.rows,
+    page: page,
+    size: size,
+    totalPages: Math.ceil(usersWithCount.count / size),
+  };
+};
+
+module.exports = { save, findByEmail, activate, getUsers };
