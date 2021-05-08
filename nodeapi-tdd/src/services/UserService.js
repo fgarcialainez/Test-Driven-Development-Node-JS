@@ -90,4 +90,11 @@ const getUser = async (id) => {
   return user;
 };
 
-module.exports = { save, findByEmail, activate, getUsers, getUser };
+// Update an user in the system
+const updateUser = async (id, updatedBody) => {
+  const user = await User.findOne({ where: { id: id } });
+  user.username = updatedBody.username;
+  await user.save();
+};
+
+module.exports = { save, findByEmail, activate, getUsers, getUser, updateUser };

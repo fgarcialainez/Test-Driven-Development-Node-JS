@@ -36,6 +36,9 @@ beforeAll(async () => {
 
   // Synchronize the ORM with database
   await sequelize.sync();
+
+  // Set timeout
+  jest.setTimeout(20000);
 });
 
 beforeEach(async () => {
@@ -49,6 +52,9 @@ beforeEach(async () => {
 afterAll(async () => {
   // Close SMTP server connection
   await server.close();
+
+  // Set timeout
+  jest.setTimeout(20000);
 });
 
 const validUser = {
