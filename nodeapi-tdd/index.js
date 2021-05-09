@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const app = require('./src/app');
 const sequelize = require('./src/config/database');
 const User = require('./src/models/User');
+const TokenService = require('./src/services/TokenService');
 
 // Function to add an initial set of users in the system
 const addUsers = async (activeUserCount, inactiveUserCount = 0) => {
@@ -21,6 +22,9 @@ const addUsers = async (activeUserCount, inactiveUserCount = 0) => {
 sequelize.sync({ force: true }).then(async () => {
   await addUsers(25);
 });
+
+// Clean tokens
+TokenService.scheduleCleanup();
 
 // Start listening on port 3000
 app.listen(3000, () => console.log('Express REST API Running!'));

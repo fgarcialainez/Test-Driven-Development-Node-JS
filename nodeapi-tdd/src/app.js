@@ -5,6 +5,7 @@ const middleware = require('i18next-http-middleware');
 const UserRouter = require('./routers/UserRouter');
 const AuthenticationRouter = require('./routers/AuthenticationRouter');
 const ErrorHandler = require('./exceptions/ErrorHandler');
+const authentication = require('./middleware/tokenAuthentication');
 
 // Create expresss app
 const app = express();
@@ -29,6 +30,7 @@ i18next
 // Setup middleware
 app.use(middleware.handle(i18next));
 app.use(express.json());
+app.use(authentication);
 app.use(UserRouter);
 app.use(AuthenticationRouter);
 app.use(ErrorHandler);

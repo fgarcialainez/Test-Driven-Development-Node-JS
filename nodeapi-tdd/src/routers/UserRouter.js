@@ -1,7 +1,6 @@
 const UserService = require('../services/UserService');
 const { check, validationResult } = require('express-validator');
 const pagination = require('../middleware/pagination');
-const authentication = require('../middleware/tokenAuthentication');
 const ValidationException = require('../exceptions/ValidationException');
 const ForbiddenException = require('../exceptions/ForbiddenException');
 
@@ -74,7 +73,7 @@ router.post('/api/v1.0/users/token/:token', async (req, res, next) => {
 });
 
 // Retrieve users list endpoint
-router.get('/api/v1.0/users', pagination, authentication, async (req, res) => {
+router.get('/api/v1.0/users', pagination, async (req, res) => {
   const authenticatedUser = req.authenticatedUser;
   const { page, size } = req.pagination;
   const users = await UserService.getUsers(page, size, authenticatedUser);
@@ -92,7 +91,7 @@ router.get('/api/v1.0/users/:id', async (req, res, next) => {
 });
 
 // Update user endpoint
-router.put('/api/v1.0/users/:id', authentication, async (req, res, next) => {
+router.put('/api/v1.0/users/:id', async (req, res, next) => {
   const authenticatedUser = req.authenticatedUser;
 
   // eslint-disable-next-line eqeqeq
@@ -104,7 +103,7 @@ router.put('/api/v1.0/users/:id', authentication, async (req, res, next) => {
 });
 
 // Delete user endpoint
-router.delete('/api/v1.0/users/:id', authentication, async (req, res, next) => {
+router.delete('/api/v1.0/users/:id', async (req, res, next) => {
   const authenticatedUser = req.authenticatedUser;
   // eslint-disable-next-line eqeqeq
   if (!authenticatedUser || authenticatedUser.id != req.params.id) {
