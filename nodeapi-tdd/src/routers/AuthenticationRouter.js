@@ -40,4 +40,14 @@ router.post(
   }
 );
 
+// Logout operation
+router.post('/api/v1.0/logout', async (req, res) => {
+  const authorization = req.headers.authorization;
+  if (authorization) {
+    const token = authorization.substring(7);
+    await TokenService.deleteToken(token);
+  }
+  res.send();
+});
+
 module.exports = router;
