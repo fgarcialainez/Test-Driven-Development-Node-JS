@@ -2,6 +2,7 @@ const request = require('supertest');
 const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const User = require('../src/models/User');
+const Token = require('../src/models/Token');
 const sequelize = require('../src/config/database');
 const en = require('../locales/en/translation.json');
 const tr = require('../locales/tr/translation.json');
@@ -11,7 +12,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await User.destroy({ truncate: true });
+  await User.destroy({ truncate: { cascade: true } });
 });
 
 const activeUser = {
@@ -50,7 +51,7 @@ const deleteUser = async (id = 5, options = {}) => {
 };
 
 describe('User Delete', () => {
-  it('returns forbidden when request sent unauthorized', async () => {
+  it('Returns forbidden when request sent unauthorized', async () => {
     const response = await deleteUser();
     expect(response.status).toBe(403);
   });
@@ -60,7 +61,7 @@ describe('User Delete', () => {
     ${'tr'}  | ${tr.unauthorized_user_delete}
     ${'en'}  | ${en.unauthorized_user_delete}
   `(
-    'returns error body with $message for unauthorized request when language is $language',
+    'Returns error body with $message for unauthorized request when language is $language',
     async ({ language, message }) => {
       const nowInMillis = new Date().getTime();
       const response = await deleteUser(5, { language });
@@ -69,7 +70,8 @@ describe('User Delete', () => {
       expect(response.body.message).toBe(message);
     }
   );
-  it('returns forbidden when delete request is sent with correct credentials but for different user', async () => {
+
+  it('Returns forbidden when delete request is sent with correct credentials but for different user', async () => {
     await addUser();
     const userToBeDelete = await addUser({
       ...activeUser,
@@ -82,11 +84,13 @@ describe('User Delete', () => {
     const response = await deleteUser(userToBeDelete.id, { token: token });
     expect(response.status).toBe(403);
   });
-  it('reutrns 403 when token is not valid', async () => {
+
+  it('Returns 403 when token is not valid', async () => {
     const response = await deleteUser(5, { token: '123' });
     expect(response.status).toBe(403);
   });
-  it('returns 200 ok when delete request sent from authorized user', async () => {
+
+  it('Returns 200 ok when delete request sent from authorized user', async () => {
     const savedUser = await addUser();
     const token = await auth({
       auth: { email: 'user1@mail.com', password: 'P4ssword' },
@@ -94,7 +98,8 @@ describe('User Delete', () => {
     const response = await deleteUser(savedUser.id, { token: token });
     expect(response.status).toBe(200);
   });
-  it('deletes user from database when request sent from authorized user', async () => {
+
+  it('Deletes user from database when request sent from authorized user', async () => {
     const savedUser = await addUser();
     const token = await auth({
       auth: { email: 'user1@mail.com', password: 'P4ssword' },
@@ -103,5 +108,30 @@ describe('User Delete', () => {
 
     const inDBUser = await User.findOne({ where: { id: savedUser.id } });
     expect(inDBUser).toBeNull();
+  });
+
+  it('Deletes token from database when delete user request sent from authorized user', async () => {
+    const savedUser = await addUser();
+    const token = await auth({
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    await deleteUser(savedUser.id, { token: token });
+
+    const tokenInDB = await Token.findOne({ where: { token: token } });
+    expect(tokenInDB).toBeNull();
+  });
+
+  it('Deletes all tokens from database when delete user request sent from authorized user', async () => {
+    const savedUser = await addUser();
+    const token1 = await auth({
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    const token2 = await auth({
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    await deleteUser(savedUser.id, { token: token1 });
+
+    const tokenInDB = await Token.findOne({ where: { token: token2 } });
+    expect(tokenInDB).toBeNull();
   });
 });

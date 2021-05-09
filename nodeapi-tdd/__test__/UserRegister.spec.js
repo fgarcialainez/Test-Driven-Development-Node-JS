@@ -46,7 +46,7 @@ beforeEach(async () => {
   simulateSmtpFailure = false;
 
   // Clean database before each test
-  await User.destroy({ truncate: true });
+  await User.destroy({ truncate: { cascade: true } });
 });
 
 afterAll(async () => {
