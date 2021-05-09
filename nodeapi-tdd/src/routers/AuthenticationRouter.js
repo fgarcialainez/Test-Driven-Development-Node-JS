@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const { check, validationResult } = require('express-validator');
 const UserService = require('../services/UserService');
+const TokenService = require('../services/TokenService');
 const AuthenticationException = require('../exceptions/AuthenticationException');
 const ForbiddenException = require('../exceptions/ForbiddenException');
 
@@ -29,9 +30,12 @@ router.post(
     if (user.inactive) {
       return next(new ForbiddenException());
     }
+
+    const token = TokenService.createToken(user);
     res.send({
       id: user.id,
       username: user.username,
+      token,
     });
   }
 );

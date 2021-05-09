@@ -1,7 +1,7 @@
 const UserService = require('../services/UserService');
 const { check, validationResult } = require('express-validator');
 const pagination = require('../middleware/pagination');
-const authentication = require('../middleware/authentication');
+const authentication = require('../middleware/tokenAuthentication');
 const ValidationException = require('../exceptions/ValidationException');
 const ForbiddenException = require('../exceptions/ForbiddenException');
 

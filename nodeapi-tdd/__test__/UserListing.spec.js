@@ -14,12 +14,22 @@ beforeEach(async () => {
   await User.destroy({ truncate: true });
 });
 
+const auth = async (options = {}) => {
+  let token;
+  if (options.auth) {
+    const response = await request(app)
+      .post('/api/v1.0/auth')
+      .send(options.auth);
+    token = response.body.token;
+  }
+  return token;
+};
+
 const getUsers = (options = {}) => {
   const agent = request(app).get('/api/v1.0/users');
 
-  if (options.auth) {
-    const { email, password } = options.auth;
-    agent.auth(email, password);
+  if (options.token) {
+    agent.set('Authorization', `Bearer ${options.token}`);
   }
   return agent;
 };
@@ -120,9 +130,10 @@ describe('Listing Users', () => {
 
   it('Returns user page without logged in user when request has valid authorization', async () => {
     await addUsers(11);
-    const response = await getUsers({
+    const token = await auth({
       auth: { email: 'user1@mail.com', password: 'P4ssword' },
     });
+    const response = await getUsers({ token: token });
     expect(response.body.totalPages).toBe(1);
   });
 });

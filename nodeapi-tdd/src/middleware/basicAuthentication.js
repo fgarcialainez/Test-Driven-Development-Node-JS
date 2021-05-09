@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const UserService = require('../services/UserService');
 
-const authentication = async (req, res, next) => {
+const basicAuthentication = async (req, res, next) => {
   const authorization = req.headers.authorization;
   if (authorization) {
     const encoded = authorization.substring(6);
@@ -19,4 +19,4 @@ const authentication = async (req, res, next) => {
   next();
 };
 
-module.exports = authentication;
+module.exports = basicAuthentication;
