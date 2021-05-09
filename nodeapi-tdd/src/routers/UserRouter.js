@@ -91,16 +91,27 @@ router.get('/api/v1.0/users/:id', async (req, res, next) => {
   }
 });
 
-// Update user endpoit
+// Update user endpoint
 router.put('/api/v1.0/users/:id', authentication, async (req, res, next) => {
   const authenticatedUser = req.authenticatedUser;
 
   // eslint-disable-next-line eqeqeq
   if (!authenticatedUser || authenticatedUser.id != req.params.id) {
-    return next(new ForbiddenException('unauthroized_user_update'));
+    return next(new ForbiddenException('unauthorized_user_update'));
   }
   await UserService.updateUser(req.params.id, req.body);
   return res.send();
+});
+
+// Delete user endpoint
+router.delete('/api/v1.0/users/:id', authentication, async (req, res, next) => {
+  const authenticatedUser = req.authenticatedUser;
+  // eslint-disable-next-line eqeqeq
+  if (!authenticatedUser || authenticatedUser.id != req.params.id) {
+    return next(new ForbiddenException('unauthorized_user_delete'));
+  }
+  await UserService.deleteUser(req.params.id);
+  res.send();
 });
 
 // Export the router

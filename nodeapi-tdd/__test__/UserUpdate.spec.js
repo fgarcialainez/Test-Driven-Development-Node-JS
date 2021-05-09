@@ -56,10 +56,10 @@ describe('User Update', () => {
 
   it.each`
     language | message
-    ${'tr'}  | ${tr.unauthroized_user_update}
-    ${'en'}  | ${en.unauthroized_user_update}
+    ${'tr'}  | ${tr.unauthorized_user_update}
+    ${'en'}  | ${en.unauthorized_user_update}
   `(
-    'Returns error body with $message for unauthroized request when language is $language',
+    'Returns error body with $message for unauthorized request when language is $language',
     async ({ language, message }) => {
       const nowInMillis = new Date().getTime();
       const response = await putUser(5, null, { language });
