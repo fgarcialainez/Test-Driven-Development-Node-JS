@@ -2,6 +2,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const sequelize = require('../src/models/User');
 const SMTPServer = require('smtp-server').SMTPServer;
+const config = require('config');
 const User = require('../src/models/User');
 const en = require('../locales/en/translation.json');
 const tr = require('../locales/tr/translation.json');
@@ -32,7 +33,7 @@ beforeAll(async () => {
     },
   });
 
-  await server.listen(8587, 'localhost');
+  await server.listen(config.mail.port, 'localhost');
 
   // Synchronize the ORM with database
   await sequelize.sync();
