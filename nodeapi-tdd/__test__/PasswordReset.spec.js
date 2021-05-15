@@ -4,6 +4,7 @@ const SMTPServer = require('smtp-server').SMTPServer;
 const config = require('config');
 const app = require('../src/app');
 const User = require('../src/models/User');
+const Token = require('../src/models/Token');
 const sequelize = require('../src/config/database');
 const en = require('../locales/en/translation.json');
 const tr = require('../locales/tr/translation.json');
@@ -69,6 +70,15 @@ const postPasswordReset = (email = 'user1@mail.com', options = {}) => {
     agent.set('Accept-Language', options.language);
   }
   return agent.send({ email: email });
+};
+
+const putPasswordUpdate = (body = {}, options = {}) => {
+  const agent = request(app).put('/api/v1.0/user/password');
+
+  if (options.language) {
+    agent.set('Accept-Language', options.language);
+  }
+  return agent.send(body);
 };
 
 describe('Password Reset Request', () => {
@@ -162,4 +172,156 @@ describe('Password Reset Request', () => {
       expect(response.body.message).toBe(message);
     }
   );
+
+  describe('Password Update', () => {
+    it('Returns 403 when password update request does not have the valid password reset token', async () => {
+      const response = await putPasswordUpdate({
+        password: 'P4ssword',
+        passwordResetToken: 'abcd',
+      });
+      expect(response.status).toBe(403);
+    });
+
+    it.each`
+      language | message
+      ${'tr'}  | ${tr.unauthorized_password_reset}
+      ${'en'}  | ${en.unauthorized_password_reset}
+    `(
+      'Returns error body with $message when language is set to $language after trying to update with invalid token',
+      async ({ language, message }) => {
+        const nowInMillis = new Date().getTime();
+        const response = await putPasswordUpdate(
+          {
+            password: 'P4ssword',
+            passwordResetToken: 'abcd',
+          },
+          { language }
+        );
+        expect(response.body.path).toBe('/api/v1.0/user/password');
+        expect(response.body.timestamp).toBeGreaterThan(nowInMillis);
+        expect(response.body.message).toBe(message);
+      }
+    );
+
+    it('Returns 403 when password update request with invalid password pattern and the reset token is invalid', async () => {
+      const response = await putPasswordUpdate({
+        password: 'not-valid',
+        passwordResetToken: 'abcd',
+      });
+      expect(response.status).toBe(403);
+    });
+
+    it('Returns 400 when trying to update with invalid password and the reset token is valid', async () => {
+      const user = await addUser();
+      user.passwordResetToken = 'test-token';
+      await user.save();
+      const response = await putPasswordUpdate({
+        password: 'not-valid',
+        passwordResetToken: 'test-token',
+      });
+      expect(response.status).toBe(400);
+    });
+
+    it.each`
+      language | value              | message
+      ${'en'}  | ${null}            | ${en.password_null}
+      ${'en'}  | ${'P4ssw'}         | ${en.password_size}
+      ${'en'}  | ${'alllowercase'}  | ${en.password_pattern}
+      ${'en'}  | ${'ALLUPPERCASE'}  | ${en.password_pattern}
+      ${'en'}  | ${'1234567890'}    | ${en.password_pattern}
+      ${'en'}  | ${'lowerandUPPER'} | ${en.password_pattern}
+      ${'en'}  | ${'lower4nd5667'}  | ${en.password_pattern}
+      ${'en'}  | ${'UPPER44444'}    | ${en.password_pattern}
+      ${'tr'}  | ${null}            | ${tr.password_null}
+      ${'tr'}  | ${'P4ssw'}         | ${tr.password_size}
+      ${'tr'}  | ${'alllowercase'}  | ${tr.password_pattern}
+      ${'tr'}  | ${'ALLUPPERCASE'}  | ${tr.password_pattern}
+      ${'tr'}  | ${'1234567890'}    | ${tr.password_pattern}
+      ${'tr'}  | ${'lowerandUPPER'} | ${tr.password_pattern}
+      ${'tr'}  | ${'lower4nd5667'}  | ${tr.password_pattern}
+      ${'tr'}  | ${'UPPER44444'}    | ${tr.password_pattern}
+    `(
+      'Returns password validation error $message when language is set to $language and the value is $value',
+      async ({ language, message, value }) => {
+        const user = await addUser();
+        user.passwordResetToken = 'test-token';
+        await user.save();
+        const response = await putPasswordUpdate(
+          {
+            password: value,
+            passwordResetToken: 'test-token',
+          },
+          { language: language }
+        );
+        expect(response.body.validationErrors.password).toBe(message);
+      }
+    );
+  });
+
+  it('Returns 200 when valid password is sent with valid reset token', async () => {
+    const user = await addUser();
+    user.passwordResetToken = 'test-token';
+    await user.save();
+    const response = await putPasswordUpdate({
+      password: 'N3w-password',
+      passwordResetToken: 'test-token',
+    });
+    expect(response.status).toBe(200);
+  });
+
+  it('Updates the password in database when the request is valid', async () => {
+    const user = await addUser();
+    user.passwordResetToken = 'test-token';
+    await user.save();
+    await putPasswordUpdate({
+      password: 'N3w-password',
+      passwordResetToken: 'test-token',
+    });
+    const userInDB = await User.findOne({ where: { email: 'user1@mail.com' } });
+    expect(userInDB.password).not.toEqual(user.password);
+  });
+
+  it('Clears the reset token in database when the request is valid', async () => {
+    const user = await addUser();
+    user.passwordResetToken = 'test-token';
+    await user.save();
+    await putPasswordUpdate({
+      password: 'N3w-password',
+      passwordResetToken: 'test-token',
+    });
+    const userInDB = await User.findOne({ where: { email: 'user1@mail.com' } });
+    expect(userInDB.passwordResetToken).toBeFalsy();
+  });
+
+  it('Activates and clears activation token if the account is inactive after valid password reset', async () => {
+    const user = await addUser();
+    user.passwordResetToken = 'test-token';
+    user.activationToken = 'activation-token';
+    user.inactive = true;
+    await user.save();
+    await putPasswordUpdate({
+      password: 'N3w-password',
+      passwordResetToken: 'test-token',
+    });
+    const userInDB = await User.findOne({ where: { email: 'user1@mail.com' } });
+    expect(userInDB.activationToken).toBeFalsy();
+    expect(userInDB.inactive).toBe(false);
+  });
+
+  it('Clears all tokens of user after valid password reset', async () => {
+    const user = await addUser();
+    user.passwordResetToken = 'test-token';
+    await user.save();
+    await Token.create({
+      token: 'token-1',
+      userId: user.id,
+      lastUsedAt: Date.now(),
+    });
+    await putPasswordUpdate({
+      password: 'N3w-password',
+      passwordResetToken: 'test-token',
+    });
+    const tokens = await Token.findAll({ where: { userId: user.id } });
+    expect(tokens.length).toBe(0);
+  });
 });

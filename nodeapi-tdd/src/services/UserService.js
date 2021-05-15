@@ -8,6 +8,7 @@ const InvalidTokenException = require('../exceptions/InvalidTokenException');
 const NotFoundException = require('../exceptions/NotFoundException');
 
 const { randomString } = require('../shared/generator');
+const TokenService = require('../services/TokenService');
 
 // Creates a user in the system
 const save = async (body) => {
@@ -120,6 +121,22 @@ const passwordResetRequest = async (email) => {
   }
 };
 
+// Update password endpoint
+const updatePassword = async (updateRequest) => {
+  const user = await findByPasswordResetToken(updateRequest.passwordResetToken);
+  const hash = await bcrypt.hash(updateRequest.password, 10);
+  user.password = hash;
+  user.passwordResetToken = null;
+  user.inactive = false;
+  user.activationToken = null;
+  await user.save();
+  await TokenService.clearTokens(user.id);
+};
+
+const findByPasswordResetToken = (token) => {
+  return User.findOne({ where: { passwordResetToken: token } });
+};
+
 module.exports = {
   save,
   findByEmail,
@@ -129,4 +146,6 @@ module.exports = {
   updateUser,
   deleteUser,
   passwordResetRequest,
+  updatePassword,
+  findByPasswordResetToken,
 };
