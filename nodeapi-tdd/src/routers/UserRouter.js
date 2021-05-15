@@ -3,6 +3,7 @@ const { check, validationResult } = require('express-validator');
 const pagination = require('../middleware/pagination');
 const ValidationException = require('../exceptions/ValidationException');
 const ForbiddenException = require('../exceptions/ForbiddenException');
+const FileService = require('../services/FileService');
 
 const express = require('express');
 
@@ -91,17 +92,44 @@ router.get('/api/v1.0/users/:id', async (req, res, next) => {
 });
 
 // Update user endpoint
-router.put('/api/v1.0/users/:id', async (req, res, next) => {
-  const authenticatedUser = req.authenticatedUser;
+router.put(
+  '/api/v1.0/users/:id',
+  check('username')
+    .notEmpty()
+    .withMessage('username_null')
+    .bail()
+    .isLength({ min: 4, max: 32 })
+    .withMessage('username_size'),
+  check('image').custom(async (imageAsBase64String) => {
+    if (!imageAsBase64String) {
+      return true;
+    }
+    const buffer = Buffer.from(imageAsBase64String, 'base64');
+    if (!FileService.isLessThan2MB(buffer)) {
+      throw new Error('profile_image_size');
+    }
 
-  // eslint-disable-next-line eqeqeq
-  if (!authenticatedUser || authenticatedUser.id != req.params.id) {
-    return next(new ForbiddenException('unauthorized_user_update'));
+    const supportedType = await FileService.isSupportedFileType(buffer);
+    if (!supportedType) {
+      throw new Error('unsupported_image_file');
+    }
+    return true;
+  }),
+  async (req, res, next) => {
+    const authenticatedUser = req.authenticatedUser;
+
+    // eslint-disable-next-line eqeqeq
+    if (!authenticatedUser || authenticatedUser.id != req.params.id) {
+      return next(new ForbiddenException('unauthorized_user_update'));
+    }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return next(new ValidationException(errors.array()));
+    }
+    const user = await UserService.updateUser(req.params.id, req.body);
+    return res.send(user);
   }
-
-  const user = await UserService.updateUser(req.params.id, req.body);
-  return res.send(user);
-});
+);
 
 // Delete user endpoint
 router.delete('/api/v1.0/users/:id', async (req, res, next) => {
