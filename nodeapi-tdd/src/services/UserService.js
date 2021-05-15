@@ -6,9 +6,9 @@ const EmailService = require('./EmailService');
 const EmailException = require('../exceptions/EmailException');
 const InvalidTokenException = require('../exceptions/InvalidTokenException');
 const NotFoundException = require('../exceptions/NotFoundException');
-
 const { randomString } = require('../shared/generator');
 const TokenService = require('../services/TokenService');
+const FileService = require('../services/FileService');
 
 // Creates a user in the system
 const save = async (body) => {
@@ -97,7 +97,15 @@ const getUser = async (id) => {
 const updateUser = async (id, updatedBody) => {
   const user = await User.findOne({ where: { id: id } });
   user.username = updatedBody.username;
-  user.image = updatedBody.image;
+
+  if (user.image) {
+    await FileService.deleteProfileImage(user.image);
+  }
+
+  if (updatedBody.image) {
+    user.image = await FileService.saveProfileImage(updatedBody.image);
+  }
+
   await user.save();
 
   return {

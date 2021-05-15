@@ -105,3 +105,6 @@ dist
 
 # macOS files
 .DS_Store
+
+# Uploads folder
+uploads-test

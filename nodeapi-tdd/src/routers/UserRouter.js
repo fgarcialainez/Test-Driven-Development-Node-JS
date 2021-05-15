@@ -98,6 +98,7 @@ router.put('/api/v1.0/users/:id', async (req, res, next) => {
   if (!authenticatedUser || authenticatedUser.id != req.params.id) {
     return next(new ForbiddenException('unauthorized_user_update'));
   }
+
   const user = await UserService.updateUser(req.params.id, req.body);
   return res.send(user);
 });

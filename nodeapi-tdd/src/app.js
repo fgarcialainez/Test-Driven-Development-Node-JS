@@ -7,6 +7,13 @@ const AuthenticationRouter = require('./routers/AuthenticationRouter');
 const ErrorHandler = require('./exceptions/ErrorHandler');
 const authentication = require('./middleware/tokenAuthentication');
 const FileService = require('./services/FileService');
+const config = require('config');
+const path = require('path');
+
+const { uploadDir, profileDir } = config;
+const profileFolder = path.join('.', uploadDir, profileDir);
+
+const ONE_YEAR_IN_MILLIS = 365 * 24 * 60 * 60 * 1000;
 
 // Create download folders
 FileService.createFolders();
@@ -38,5 +45,11 @@ app.use(authentication);
 app.use(UserRouter);
 app.use(AuthenticationRouter);
 app.use(ErrorHandler);
+
+// Serve static resources
+app.use(
+  '/images',
+  express.static(profileFolder, { maxAge: ONE_YEAR_IN_MILLIS })
+);
 
 module.exports = app;
