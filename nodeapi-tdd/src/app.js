@@ -6,6 +6,10 @@ const UserRouter = require('./routers/UserRouter');
 const AuthenticationRouter = require('./routers/AuthenticationRouter');
 const ErrorHandler = require('./exceptions/ErrorHandler');
 const authentication = require('./middleware/tokenAuthentication');
+const FileService = require('./services/FileService');
+
+// Create download folders
+FileService.createFolders();
 
 // Create expresss app
 const app = express();

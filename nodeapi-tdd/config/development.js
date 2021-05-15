@@ -14,5 +14,7 @@ module.exports = {
       user: 'hannah.stracke62@ethereal.email',
       pass: 'Udhq8A43hSujuuSPS7',
     },
+    uploadDir: 'uploads-dev',
+    profileDir: 'profile',
   },
 };
