@@ -113,5 +113,23 @@ router.delete('/api/v1.0/users/:id', async (req, res, next) => {
   res.send();
 });
 
+// Password reset endpoint
+router.post(
+  '/api/v1.0/password-reset',
+  check('email').isEmail().withMessage('email_invalid'),
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return next(new ValidationException(errors.array()));
+    }
+    try {
+      await UserService.passwordResetRequest(req.body.email);
+      return res.send({ message: req.t('password_reset_request_success') });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // Export the router
 module.exports = router;

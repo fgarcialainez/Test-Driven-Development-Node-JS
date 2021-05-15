@@ -16,5 +16,7 @@
   "authentication_failure": "Incorrect credentials",
   "inactive_authentication_failure": "Account is inactive",
   "unauthorized_user_update": "You are not authorized to update user",
-  "unauthorized_user_delete": "You are not authorized to delete user"
+  "unauthorized_user_delete": "You are not authorized to delete user",
+  "email_not_in_use": "E-mail not found",
+  "password_reset_request_success": "Check your e-mail for resetting your password"
 }

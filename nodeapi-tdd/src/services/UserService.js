@@ -5,7 +5,7 @@ const sequelize = require('../config/database');
 const EmailService = require('./EmailService');
 const EmailException = require('../exceptions/EmailException');
 const InvalidTokenException = require('../exceptions/InvalidTokenException');
-const UserNotFoundException = require('../exceptions/UserNotFoundException');
+const NotFoundException = require('../exceptions/NotFoundException');
 
 const { randomString } = require('../shared/generator');
 
@@ -87,7 +87,7 @@ const getUser = async (id) => {
     attributes: ['id', 'username', 'email'],
   });
   if (!user) {
-    throw new UserNotFoundException();
+    throw new NotFoundException('user_not_found');
   }
   return user;
 };
@@ -104,6 +104,16 @@ const deleteUser = async (id) => {
   await User.destroy({ where: { id: id } });
 };
 
+// Reset user password
+const passwordResetRequest = async (email) => {
+  const user = await findByEmail(email);
+  if (!user) {
+    throw new NotFoundException('email_not_in_use');
+  }
+  user.passwordResetToken = randomString(16);
+  await user.save();
+};
+
 module.exports = {
   save,
   findByEmail,
@@ -112,4 +122,5 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
+  passwordResetRequest,
 };
