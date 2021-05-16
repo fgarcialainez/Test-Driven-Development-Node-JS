@@ -35,7 +35,9 @@ beforeAll(async () => {
   await server.listen(config.mail.port, 'localhost');
 
   // Synchronize the ORM with database
-  await sequelize.sync();
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
 
   // Set timeout
   jest.setTimeout(20000);
