@@ -107,4 +107,7 @@ dist
 .DS_Store
 
 # Uploads folder
-uploads-test
+uploads-*
+
+# Logs
+*.log
