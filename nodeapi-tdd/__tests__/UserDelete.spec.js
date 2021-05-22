@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const User = require('../src/models/User');
 const Token = require('../src/models/Token');
+const Hoax = require('../src/models/Hoax');
 const sequelize = require('../src/config/database');
 const en = require('../locales/en/translation.json');
 const tr = require('../locales/tr/translation.json');
@@ -125,5 +126,20 @@ describe('User Delete', () => {
 
     const tokenInDB = await Token.findOne({ where: { token: token2 } });
     expect(tokenInDB).toBeNull();
+  });
+
+  it('Deletes hoax from database when delete user request sent from authorized user', async () => {
+    const savedUser = await addUser();
+    const token = await auth({ auth: credentials });
+
+    await request(app)
+      .post('/api/v1.0/hoaxes')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ content: 'Hoax content' });
+
+    await deleteUser(savedUser.id, { token: token });
+
+    const hoaxes = await Hoax.findAll();
+    expect(hoaxes.length).toBe(0);
   });
 });

@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/database');
 const Token = require('../models/Token');
+const Hoax = require('../models/Hoax');
 
 // Define User class
 class User extends Sequelize.Model {}
@@ -37,7 +38,8 @@ User.init(
   }
 );
 
-// Define User - Token relationship
+// Define relationships
 User.hasMany(Token, { onDelete: 'cascade', foreignKey: 'userId' });
+User.hasMany(Hoax, { onDelete: 'cascade', foreignKey: 'userId' });
 
 module.exports = User;
