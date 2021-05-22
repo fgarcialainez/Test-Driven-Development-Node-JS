@@ -3,6 +3,7 @@
 const bcrypt = require('bcrypt');
 
 module.exports = {
+  // eslint-disable-next-line no-unused-vars
   up: async (queryInterface, Sequelize) => {
     const hash = await bcrypt.hash('P4ssword', 10);
     const users = [];
@@ -19,6 +20,7 @@ module.exports = {
     await queryInterface.bulkInsert('users', users, {});
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.bulkdDelete('users', null, {});
   },
