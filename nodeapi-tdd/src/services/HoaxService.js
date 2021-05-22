@@ -1,5 +1,6 @@
 const Hoax = require('../models/Hoax');
 const User = require('../models/User');
+const FileService = require('../services/FileService');
 const NotFoundException = require('../exceptions/NotFoundException');
 
 const save = async (body, user) => {
@@ -8,7 +9,10 @@ const save = async (body, user) => {
     timestamp: Date.now(),
     userId: user.id,
   };
-  await Hoax.create(hoax);
+  const { id } = await Hoax.create(hoax);
+  if (body.fileAttachment) {
+    await FileService.associateFileToHoax(body.fileAttachment, id);
+  }
 };
 
 const getHoaxes = async (page, size, userId) => {

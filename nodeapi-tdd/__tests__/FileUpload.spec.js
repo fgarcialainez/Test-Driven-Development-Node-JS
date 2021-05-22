@@ -140,4 +140,9 @@ describe('Upload File for Hoax', () => {
       fs.unlinkSync(filePath);
     }
   );
+
+  it('Returns attachment id in response', async () => {
+    const response = await uploadFile();
+    expect(Object.keys(response.body)).toEqual(['id']);
+  });
 });
