@@ -117,7 +117,9 @@ const updateUser = async (id, updatedBody) => {
 
 // Delete an user in the system
 const deleteUser = async (id) => {
-  await User.destroy({ where: { id: id } });
+  const user = await User.findOne({ where: { id: id } });
+  await FileService.deleteUserFiles(user);
+  await user.destroy();
 };
 
 // Reset user password
