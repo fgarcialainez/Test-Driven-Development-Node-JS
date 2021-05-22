@@ -4,6 +4,7 @@ const AuthenticationException = require('../exceptions/AuthenticationException')
 const HoaxService = require('../services/HoaxService');
 const { check, validationResult } = require('express-validator');
 const ValidationException = require('../exceptions/ValidationException');
+const pagination = require('../middleware/pagination');
 
 router.post(
   '/api/v1.0/hoaxes',
@@ -21,6 +22,21 @@ router.post(
     }
     await HoaxService.save(req.body, req.authenticatedUser);
     return res.send({ message: req.t('hoax_submit_success') });
+  }
+);
+
+router.get(
+  ['/api/v1.0/hoaxes', '/api/v1.0/users/:userId/hoaxes'],
+  pagination,
+  async (req, res, next) => {
+    const { page, size } = req.pagination;
+
+    try {
+      const hoaxes = await HoaxService.getHoaxes(page, size, req.params.userId);
+      res.send(hoaxes);
+    } catch (err) {
+      next(err);
+    }
   }
 );
 
