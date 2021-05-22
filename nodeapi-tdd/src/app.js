@@ -3,6 +3,7 @@ const i18next = require('i18next');
 const Backend = require('i18next-fs-backend');
 const middleware = require('i18next-http-middleware');
 const UserRouter = require('./routers/UserRouter');
+const HoaxRouter = require('./routers/HoaxRouter');
 const AuthenticationRouter = require('./routers/AuthenticationRouter');
 const ErrorHandler = require('./exceptions/ErrorHandler');
 const authentication = require('./middleware/tokenAuthentication');
@@ -44,6 +45,7 @@ app.use(express.json({ limit: '3mb' }));
 app.use(authentication);
 app.use(UserRouter);
 app.use(AuthenticationRouter);
+app.use(HoaxRouter);
 app.use(ErrorHandler);
 
 // Serve static resources

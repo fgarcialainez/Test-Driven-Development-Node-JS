@@ -29,6 +29,8 @@ const activeUser = {
   inactive: false,
 };
 
+const credentials = { email: 'user1@mail.com', password: 'P4ssword' };
+
 const addUser = async (user = { ...activeUser }) => {
   const hash = await bcrypt.hash(user.password, 10);
   user.password = hash;
@@ -85,7 +87,7 @@ describe('User Update', () => {
   it('Returns forbidden when request sent with incorrect email in basic authorization', async () => {
     await addUser();
     const response = await putUser(5, null, {
-      auth: { email: 'user1000@mail.com', password: 'P4ssword' },
+      auth: credentials,
     });
     expect(response.status).toBe(403);
   });
@@ -93,7 +95,7 @@ describe('User Update', () => {
   it('Returns forbidden when request sent with incorrect password in basic authorization', async () => {
     await addUser();
     const response = await putUser(5, null, {
-      auth: { email: 'user1@mail.com', password: 'password' },
+      auth: credentials,
     });
     expect(response.status).toBe(403);
   });
@@ -303,15 +305,18 @@ describe('User Update', () => {
     ${'test-txt.txt'} | ${400}
     ${'test-png.png'} | ${200}
     ${'test-jpg.jpg'} | ${200}
-  `('returns $status when uploading $file as image', async ({ file, status }) => {
-    const fileInBase64 = readFileAsBase64(file);
-    const savedUser = await addUser();
-    const updateBody = { username: 'user1-updated', image: fileInBase64 };
-    const response = await putUser(savedUser.id, updateBody, {
-      auth: { email: savedUser.email, password: 'P4ssword' },
-    });
-    expect(response.status).toBe(status);
-  });
+  `(
+    'returns $status when uploading $file as image',
+    async ({ file, status }) => {
+      const fileInBase64 = readFileAsBase64(file);
+      const savedUser = await addUser();
+      const updateBody = { username: 'user1-updated', image: fileInBase64 };
+      const response = await putUser(savedUser.id, updateBody, {
+        auth: { email: savedUser.email, password: 'P4ssword' },
+      });
+      expect(response.status).toBe(status);
+    }
+  );
   it.each`
     file              | language | message
     ${'test-gif.gif'} | ${'tr'}  | ${tr.unsupported_image_file}
