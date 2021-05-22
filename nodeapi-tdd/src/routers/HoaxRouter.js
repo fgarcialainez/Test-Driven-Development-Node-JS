@@ -5,6 +5,7 @@ const HoaxService = require('../services/HoaxService');
 const { check, validationResult } = require('express-validator');
 const ValidationException = require('../exceptions/ValidationException');
 const pagination = require('../middleware/pagination');
+const ForbiddenException = require('../exceptions/ForbiddenException');
 
 router.post(
   '/api/v1.0/hoaxes',
@@ -39,5 +40,18 @@ router.get(
     }
   }
 );
+
+router.delete('/api/v1.0/hoaxes/:hoaxId', async (req, res, next) => {
+  if (!req.authenticatedUser) {
+    return next(new ForbiddenException('unauthorized_hoax_delete'));
+  }
+
+  try {
+    await HoaxService.deleteHoax(req.params.hoaxId, req.authenticatedUser.id);
+    res.send();
+  } catch (err) {
+    return next(err);
+  }
+});
 
 module.exports = router;
