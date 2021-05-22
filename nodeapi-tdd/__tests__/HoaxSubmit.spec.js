@@ -4,6 +4,7 @@ const app = require('../src/app');
 const en = require('../locales/en/translation.json');
 const tr = require('../locales/tr/translation.json');
 const User = require('../src/models/User');
+const Hoax = require('../src/models/Hoax');
 const sequelize = require('../src/config/database');
 
 beforeAll(async () => {
@@ -13,6 +14,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  await Hoax.destroy({ truncate: true });
   await User.destroy({ truncate: { cascade: true } });
 });
 
@@ -81,4 +83,93 @@ describe('Post Hoax', () => {
     );
     expect(response.status).toBe(200);
   });
+
+  it('Saves the hoax to database when authorized user sends valid request', async () => {
+    await addUser();
+    await postHoax({ content: 'Hoax content' }, { auth: credentials });
+    const hoaxes = await Hoax.findAll();
+    expect(hoaxes.length).toBe(1);
+  });
+
+  it('Saves the hoax content and timestamp to database', async () => {
+    await addUser();
+    const beforeSubmit = Date.now();
+    await postHoax({ content: 'Hoax content' }, { auth: credentials });
+    const hoaxes = await Hoax.findAll();
+    const savedHoax = hoaxes[0];
+    expect(savedHoax.content).toBe('Hoax content');
+    expect(savedHoax.timestamp).toBeGreaterThan(beforeSubmit);
+    expect(savedHoax.timestamp).toBeLessThan(Date.now());
+  });
+
+  it.each`
+    language | message
+    ${'tr'}  | ${tr.hoax_submit_success}
+    ${'en'}  | ${en.hoax_submit_success}
+  `(
+    'Returns $message to success submit when language is $language',
+    async ({ language, message }) => {
+      await addUser();
+      const response = await postHoax(
+        { content: 'Hoax content' },
+        { auth: credentials, language }
+      );
+      expect(response.body.message).toBe(message);
+    }
+  );
+
+  it.each`
+    language | message
+    ${'tr'}  | ${tr.validation_failure}
+    ${'en'}  | ${en.validation_failure}
+  `(
+    'Returns 400 and $message when hoax content is less than 10 characters is $language',
+    async ({ language, message }) => {
+      await addUser();
+      const response = await postHoax(
+        { content: '123456789' },
+        { auth: credentials, language }
+      );
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(message);
+    }
+  );
+
+  it('Returns validation error body when an invalid hoax post by authorized user', async () => {
+    await addUser();
+    const nowInMillis = Date.now();
+    const response = await postHoax(
+      { content: '123456789' },
+      { auth: credentials }
+    );
+    const error = response.body;
+    expect(error.timestamp).toBeGreaterThan(nowInMillis);
+    expect(error.path).toBe('/api/v1.0/hoaxes');
+    expect(Object.keys(error)).toEqual([
+      'path',
+      'timestamp',
+      'message',
+      'validationErrors',
+    ]);
+  });
+
+  it.each`
+    language | content             | contentForDescription | message
+    ${'tr'}  | ${null}             | ${'null'}             | ${tr.hoax_content_size}
+    ${'tr'}  | ${'a'.repeat(9)}    | ${'short'}            | ${tr.hoax_content_size}
+    ${'tr'}  | ${'a'.repeat(5001)} | ${'very long'}        | ${tr.hoax_content_size}
+    ${'en'}  | ${null}             | ${'null'}             | ${en.hoax_content_size}
+    ${'en'}  | ${'a'.repeat(9)}    | ${'short'}            | ${en.hoax_content_size}
+    ${'en'}  | ${'a'.repeat(5001)} | ${'very long '}       | ${en.hoax_content_size}
+  `(
+    'Returns $message when the content is $contentForDescription and the language is $langauge',
+    async ({ language, content, message }) => {
+      await addUser();
+      const response = await postHoax(
+        { content: content },
+        { auth: credentials, language }
+      );
+      expect(response.body.validationErrors.content).toBe(message);
+    }
+  );
 });
