@@ -4,8 +4,9 @@ const path = require('path');
 const config = require('config');
 const app = require('../src/app');
 
-const { uploadDir, profileDir } = config;
+const { uploadDir, profileDir, attachmentDir } = config;
 const profileFolder = path.join('.', uploadDir, profileDir);
+const attachmentFolder = path.join('.', uploadDir, attachmentDir);
 
 describe('Profile Images', () => {
   const copyFile = () => {
@@ -34,5 +35,34 @@ describe('Profile Images', () => {
     expect(response.header['cache-control']).toContain(
       `max-age=${oneYearInSeconds}`
     );
+  });
+});
+
+describe('Attachments', () => {
+  const copyFile = () => {
+    const filePath = path.join('.', '__tests__', 'resources', 'test-png.png');
+    const storedFileName = 'test-attachment-file';
+    const targetPath = path.join(attachmentFolder, storedFileName);
+    fs.copyFileSync(filePath, targetPath);
+    return storedFileName;
+  };
+
+  it('Returns 404 when file not found', async () => {
+    const response = await request(app).get('/attachments/123456');
+    expect(response.status).toBe(404);
+  });
+
+  it('Returns 200 ok when file exist', async () => {
+    const storedFileName = copyFile();
+    const response = await request(app).get('/attachments/' + storedFileName);
+    expect(response.status).toBe(200);
+  });
+
+  it('Returns cache for 1 year in response', async () => {
+    const storedFileName = copyFile();
+    const response = await request(app).get('/attachments/' + storedFileName);
+    const oneYearInSeconds = 365 * 24 * 60 * 60;
+    // eslint-disable-next-line prettier/prettier
+    expect(response.header['cache-control']).toContain(`max-age=${oneYearInSeconds}`);
   });
 });
