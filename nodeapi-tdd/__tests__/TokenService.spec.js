@@ -1,12 +1,5 @@
-const sequelize = require('../src/config/database');
 const Token = require('../src/models/Token');
 const TokenService = require('../src/services/TokenService');
-
-beforeAll(async () => {
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
-});
 
 beforeEach(async () => {
   await Token.destroy({ truncate: true });

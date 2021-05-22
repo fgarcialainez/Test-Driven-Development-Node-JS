@@ -1,6 +1,5 @@
 const request = require('supertest');
 const app = require('../src/app');
-const sequelize = require('../src/models/User');
 const SMTPServer = require('smtp-server').SMTPServer;
 const config = require('config');
 const User = require('../src/models/User');
@@ -34,11 +33,6 @@ beforeAll(async () => {
   });
 
   await server.listen(config.mail.port, 'localhost');
-
-  // Synchronize the ORM with database
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
 
   // Set timeout
   jest.setTimeout(20000);

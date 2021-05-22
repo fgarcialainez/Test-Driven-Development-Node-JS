@@ -5,7 +5,6 @@ const config = require('config');
 const app = require('../src/app');
 const User = require('../src/models/User');
 const Token = require('../src/models/Token');
-const sequelize = require('../src/config/database');
 const en = require('../locales/en/translation.json');
 const tr = require('../locales/tr/translation.json');
 
@@ -33,11 +32,6 @@ beforeAll(async () => {
   });
 
   await server.listen(config.mail.port, 'localhost');
-
-  // Synchronize the ORM with database
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
 
   // Set timeout
   jest.setTimeout(20000);

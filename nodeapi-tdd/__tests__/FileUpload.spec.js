@@ -3,18 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const config = require('config');
 const app = require('../src/app');
-const sequelize = require('../src/config/database');
 const FileAttachment = require('../src/models/FileAttachment');
 const en = require('../locales/en/translation.json');
 const tr = require('../locales/tr/translation.json');
 
 const { uploadDir, attachmentDir } = config;
-
-beforeAll(async () => {
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
-});
 
 beforeEach(async () => {
   await FileAttachment.destroy({ truncate: true });
