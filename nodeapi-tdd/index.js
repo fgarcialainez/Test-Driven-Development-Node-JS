@@ -10,6 +10,6 @@ sequelize.sync();
 TokenService.scheduleCleanup();
 
 // Start listening on port 3000
-app.listen(3000, () =>
+app.listen(process.env.PORT || 3000, () =>
   logger.info('app is running. version: ' + process.env.npm_package_version)
 );
