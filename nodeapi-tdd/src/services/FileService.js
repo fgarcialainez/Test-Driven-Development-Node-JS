@@ -1,11 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('config');
-const { randomString } = require('../shared/generator');
 const FileType = require('file-type');
+const { randomString } = require('../shared/generator');
+const FileAttachment = require('../models/FileAttachment');
 
-const { uploadDir, profileDir } = config;
+const { uploadDir, profileDir, attachmentDir } = config;
 const profileFolder = path.join('.', uploadDir, profileDir);
+const attachmentFolder = path.join('.', uploadDir, attachmentDir);
 
 const createFolders = () => {
   if (!fs.existsSync(uploadDir)) {
@@ -14,6 +16,10 @@ const createFolders = () => {
 
   if (!fs.existsSync(profileFolder)) {
     fs.mkdirSync(profileFolder);
+  }
+
+  if (!fs.existsSync(attachmentFolder)) {
+    fs.mkdirSync(attachmentFolder);
   }
 };
 
@@ -41,10 +47,20 @@ const isSupportedFileType = async (buffer) => {
     : type.mime === 'image/png' || type.mime === 'image/jpeg';
 };
 
+const saveAttachment = async (file) => {
+  const filename = randomString(32);
+  await fs.promises.writeFile(path.join(attachmentFolder, filename), file.buffer);
+  await FileAttachment.create({
+    filename: filename,
+    uploadDate: new Date(),
+  });
+};
+
 module.exports = {
   createFolders,
   saveProfileImage,
   deleteProfileImage,
   isLessThan2MB,
   isSupportedFileType,
+  saveAttachment,
 };
